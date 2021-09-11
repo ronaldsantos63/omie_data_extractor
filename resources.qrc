@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file alias="loading.gif">resources/loading.gif</file>
+        <file alias="logo.png">resources/logo.png</file>
+<!--        <file alias="fileopen.png">images/fileopen.png</file>-->
+<!--        <file alias="icon.png">images/icon.png</file>-->
+<!--        <file>help/editmenu.html</file>-->
+<!--        <file>help/filemenu.html</file>-->
+<!--        <file>help/index.html</file>-->
+    </qresource>
+</RCC>
