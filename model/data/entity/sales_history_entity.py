@@ -175,7 +175,7 @@ class SalesHistoryEntity:
             transaction_date=date.strftime("%d%m%Y"),
             product_code=product_json_dict["cProd"],
             quantity=product_json_dict["qCom"],
-            total_price=f"{product_json_dict['vTotItem']:.2f}".replace('.', ','),
+            total_price=f"{product_json_dict['vTotItem'] - product_json_dict['vDesc']:.2f}".replace('.', ','),
             classification=classification,
             invoice_number=int(nfe_json_dict["ide"]["nNF"]),
             invoice_issue_date=date.date(),
