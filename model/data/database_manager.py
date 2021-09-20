@@ -16,8 +16,8 @@ class DatabaseManager:
     def get_all(self, entity) -> object:
         return self.__session.query(entity).all()
 
-    def get_by_filter(self, statement) -> object:
-        return self.__session.execute(statement).scalar_one_or_none()
+    def get_by_filter(self, entity, filter_statement) -> object:
+        return self.__session.query(entity).filter(filter_statement)
 
     def add_all(self, entities: list[object]):
         self.__session.add_all(entities)
@@ -32,6 +32,10 @@ class DatabaseManager:
 
     def delete_by_filter(self, entity, filter_statement) -> None:
         self.__session.query(entity).filter(filter_statement).delete(synchronize_session=False)
+        self.__session.commit()
+
+    def delete_all(self, entity) -> None:
+        self.__session.query(entity).delete(synchronize_session=False)
         self.__session.commit()
 
     def close(self):
