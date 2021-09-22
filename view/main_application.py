@@ -2,10 +2,11 @@ import sys
 from datetime import datetime
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QSystemTrayIcon
+from PyQt5.QtCore import QSettings, QThread, Qt
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QSystemTrayIcon, QCheckBox
 
 import resources
+from model.data_provider.task_import_products_and_persist import TaskImportProductsAndPersist
 from .ui.ui_mainwindow import Ui_MainWindow
 from model.data.database_manager import DatabaseManager
 from model.data_provider.task_import_sales_and_persist import TaskImportSalesAndPersist
@@ -38,6 +39,11 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         self.start_monit_push_button.pressed.connect(
             self.on_click_start_monit_push_button
         )
+
+        self.import_products_push_button.pressed.connect(
+            self.on_click_import_products_push_button
+        )
+
         self.omie_app_key_line_edit.textChanged.connect(
             lambda text: self.__settings.setValue("omie_app_key", text)
         )
@@ -50,6 +56,12 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         self.hour_for_importation_time_edit.timeChanged.connect(
             lambda time: self.__settings.setValue("hour_to_import", time.toString("hh:mm:ss"))
         )
+        self.family_code_line_edit.textChanged.connect(
+            lambda code: self.__settings.setValue("family_code", code)
+        )
+        self.check_products_elanco_local_check_box.stateChanged.connect(
+            lambda state: self.__settings.setValue("check_elanco_products_in_local_database", state)
+        )
 
         self.load_settings()
 
@@ -58,11 +70,19 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         omie_app_secret = self.__settings.value("omie_app_secret", defaultValue="", type=str)
         omie_page_size = self.__settings.value("omie_page_size", defaultValue=20, type=int)
         hour_to_import = self.__settings.value("hour_to_import", defaultValue="21:00:00", type=str)
+        family_code = self.__settings.value("family_code", defaultValue="", type=str)
+        check_elanco_products_in_local_database = self.__settings.value(
+            "check_elanco_products_in_local_database",
+            defaultValue=Qt.CheckState.Unchecked,
+            type=int
+        )
 
         self.omie_app_key_line_edit.setText(omie_app_key)
         self.omie_app_secret_line_edit.setText(omie_app_secret)
         self.page_size_spin_box.setValue(omie_page_size)
         self.hour_for_importation_time_edit.setTime(datetime.strptime(hour_to_import, "%H:%M:%S").time())
+        self.family_code_line_edit.setText(family_code)
+        self.check_products_elanco_local_check_box.setCheckState(check_elanco_products_in_local_database)
 
     def setup_tray_icon(self, icon):
         self.__tray = QSystemTrayIcon(self)
@@ -96,12 +116,25 @@ class MainApplication(QMainWindow, Ui_MainWindow):
             return
         start_date = self.start_date_dateedit.text()
         end_date = self.end_date_dateedit.text()
-        task = TaskImportSalesAndPersist(self, start_date, end_date)
+        check_products_in_local_database = self.check_products_elanco_local_check_box.isChecked()
+
+        task = TaskImportSalesAndPersist(self, start_date, end_date, check_products_in_local_database)
+        self.bind_task_events(task)
+        task.start()
+
+    def on_click_import_products_push_button(self):
+        filters: dict = None
+        if self.family_code_line_edit.text().strip():
+            filters = {"filtrar_apenas_familia": self.family_code_line_edit.text().strip()}
+        task = TaskImportProductsAndPersist(self, filters)
+        self.bind_task_events(task)
+        task.start()
+
+    def bind_task_events(self, task: QThread):
         task.on_error.connect(lambda error: QMessageBox.critical(self, "Ops ocorreu um erro!", str(error)))
         task.is_processing.connect(lambda is_processing: self.progress_bar.setMaximum(0 if is_processing else 100))
         task.on_finished.connect(lambda x: QMessageBox.information(self, "Opa!", "processo finalizado!"))
         task.on_message.connect(self.messages_label.setText)
-        task.start()
 
     def on_click_start_monit_push_button(self):
         if self.start_monit_push_button.text() == "Iniciar monitoramento":

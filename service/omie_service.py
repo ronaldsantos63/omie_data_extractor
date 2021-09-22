@@ -11,12 +11,13 @@ logger = logging.getLogger(__name__)
 class OmieService:
 
     @staticmethod
-    def __post(url: str, payload: str) -> dict:
+    def __post(url: str, payload: dict) -> dict:
+        payload_with_credentials = OmieService.__inject_credentials(payload)
         try:
             response = requests.post(
                 url,
                 headers=constants.headers,
-                data=payload
+                data=json.dumps(payload_with_credentials)
             )
 
             logger.debug(response.url)
@@ -42,11 +43,15 @@ class OmieService:
             raise OmieServiceException(str(e))
 
     @staticmethod
+    def __inject_credentials(data: dict) -> dict:
+        data["app_key"] = f"{constants.OMIE_APP_KEY}"
+        data["app_secret"] = f"{constants.OMIE_APP_SECRET}"
+        return data
+
+    @staticmethod
     def get_nfe_by_period(start_date: str, end_date: str, page: int = 1) -> dict:
-        payload = json.dumps({
+        payload = {
             "call": "ListarNF",
-            "app_key": constants.OMIE_APP_KEY,
-            "app_secret": constants.OMIE_APP_SECRET,
             "param": [
                 {
                     "pagina": page,
@@ -57,15 +62,13 @@ class OmieService:
                     "dRegFinal": end_date
                 }
             ]
-        })
+        }
         return OmieService.__post(url=f"{constants.BASE_URL}{constants.NFE_RESOURCE}", payload=payload)
 
     @staticmethod
     def get_sales_order_by_period(start_date: str, end_date: str, page: int = 1) -> dict:
-        payload = json.dumps({
+        payload = {
             "call": "ListarPedidos",
-            "app_key": constants.OMIE_APP_KEY,
-            "app_secret": constants.OMIE_APP_SECRET,
             "param": [
                 {
                     "pagina": page,
@@ -75,30 +78,26 @@ class OmieService:
                     "filtrar_por_data_ate": end_date
                 }
             ]
-        })
+        }
         return OmieService.__post(url=f"{constants.BASE_URL}{constants.SALES_ORDER_RESOURCE}", payload=payload)
 
     @staticmethod
     def get_customer_by_id(customer_id: int) -> dict:
-        payload = json.dumps({
+        payload = {
             "call": "ConsultarCliente",
-            "app_key": constants.OMIE_APP_KEY,
-            "app_secret": constants.OMIE_APP_SECRET,
             "param": [
                 {
                     "codigo_cliente_omie": customer_id
                 }
             ]
-        })
+        }
 
         return OmieService.__post(url=f"{constants.BASE_URL}{constants.CUSTOMERS_RESOURCE}", payload=payload)
 
     @staticmethod
     def get_product_by_cod(product_code: str) -> dict:
-        payload = json.dumps({
+        payload = {
             "call": "ConsultarProduto",
-            "app_key": constants.OMIE_APP_KEY,
-            "app_secret": constants.OMIE_APP_SECRET,
             "param": [
                 {
                     "codigo_produto": 0,
@@ -106,6 +105,41 @@ class OmieService:
                     "codigo": product_code
                 }
             ]
-        })
+        }
+
+        return OmieService.__post(url=f"{constants.BASE_URL}{constants.PRODUCTS_RESOURCE}", payload=payload)
+
+    @staticmethod
+    def get_products(page: int = 1, filters: dict = None) -> dict:
+        """
+        Returns a list of products
+
+
+        Example:
+
+        >>> filters = {"filtrar_apenas_familia": "family_id"}
+
+        See more about filters in `Product Request <https://app.omie.com.br/api/v1/geral/produtos/#produto_servico_list_request>`_.
+
+        :param page: The page to fetch
+        :param filters: The filters for optimize list
+
+        :return: A list of products
+        """
+        params = {
+            "pagina": page,
+            "registros_por_pagina": constants.PAGE_SIZE,
+            "apenas_importado_api": "N",
+            "filtrar_apenas_omiepdv": "N"
+        }
+        if filters:
+            params.update(filters)
+
+        payload = {
+            "call": "ListarProdutos",
+            "param": [
+                params
+            ]
+        }
 
         return OmieService.__post(url=f"{constants.BASE_URL}{constants.PRODUCTS_RESOURCE}", payload=payload)

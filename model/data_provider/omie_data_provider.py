@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from model.data.entity.products_entity import ProductEntity
 from service.omie_service import OmieService
 from model.data.database_manager import DatabaseManager
 from model.data.entity.sales_history_entity import SalesHistoryEntity
@@ -7,12 +8,11 @@ from model.data.entity.sales_history_entity import SalesHistoryEntity
 
 class OmieDataProvider:
     __service = OmieService
-    __has_data = True
     __database_manager = DatabaseManager()
 
-    def import_sales_history_by_period(self, start_date_str: str, end_date_str: str) -> None:
+    def import_sales_history_by_period(self, start_date_str: str, end_date_str: str, check_products_in_local_database=False) -> None:
         current_page = 1
-        self.__has_data = True
+        __has_data = True
 
         start_date = datetime.strptime(start_date_str, "%d/%m/%Y").date()
         end_date = datetime.strptime(end_date_str, "%d/%m/%Y").date()
@@ -23,18 +23,18 @@ class OmieDataProvider:
         )
 
         while True:
-            if not self.__has_data:
+            if not __has_data:
                 break
             nfe_result_json = self.__service.get_nfe_by_period(start_date_str, end_date_str, current_page)
             # sales_order_json = self.__service.get_sales_order_by_period(start_date_str, end_date_str, current_page)
-            self.__has_data = current_page < nfe_result_json["total_de_paginas"]
+            __has_data = current_page < nfe_result_json["total_de_paginas"]
 
             for nf_json in nfe_result_json["nfCadastro"]:
                 customer_result_json = self.__service.get_customer_by_id(nf_json["nfDestInt"]["nCodCli"])
                 for prod_json in nf_json["det"]:
-                    product_info = self.__service.get_product_by_cod(prod_json["prod"]["cProd"])
-                    if product_info["descricao_familia"] != "ELANCO":
+                    if not self.__is_elanco_product(check_products_in_local_database, prod_json):
                         continue
+
                     sales_history_entity = SalesHistoryEntity.from_json(
                         nf_json,
                         customer_result_json,
@@ -42,5 +42,29 @@ class OmieDataProvider:
                     )
 
                     self.__database_manager.add(sales_history_entity)
+            current_page += 1
+        self.__database_manager.close()
+
+    def __is_elanco_product(self, check_products_in_local_database, prod_json) -> bool:
+        if check_products_in_local_database:
+            product_database_result = self.__database_manager.get_by_filter(
+                ProductEntity, ProductEntity.gtin == prod_json["prod"]["cProd"]
+            )
+            return product_database_result.count() > 0
+        else:
+            product_info = self.__service.get_product_by_cod(prod_json["prod"]["cProd"])
+            return product_info["descricao_familia"] == "ELANCO"
+
+    def import_products(self, filters: dict = None):
+        current_page = 1
+        __has_data = True
+        self.__database_manager.delete_all(ProductEntity)
+        while __has_data:
+            products_json = self.__service.get_products(current_page, filters)
+            __has_data = current_page < products_json["total_de_paginas"]
+
+            for product_json in products_json["produto_servico_cadastro"]:
+                product_entity = ProductEntity.from_json(product_json)
+                self.__database_manager.add(product_entity)
             current_page += 1
         self.__database_manager.close()
