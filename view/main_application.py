@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, QMessageBox, QSystemTrayIcon, QCheckBox
 
 import resources
 from model.data_provider.task_import_products_and_persist import TaskImportProductsAndPersist
+from model.data_provider.task_import_sellers_and_persist import TaskImportSellersAndPersist
 from .ui.ui_mainwindow import Ui_MainWindow
 from model.data.database_manager import DatabaseManager
 from model.data_provider.task_import_sales_and_persist import TaskImportSalesAndPersist
@@ -39,9 +40,11 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         self.start_monit_push_button.pressed.connect(
             self.on_click_start_monit_push_button
         )
-
         self.import_products_push_button.pressed.connect(
             self.on_click_import_products_push_button
+        )
+        self.import_sellers_push_button.pressed.connect(
+            self.on_click_import_sellers_push_button
         )
 
         self.omie_app_key_line_edit.textChanged.connect(
@@ -127,6 +130,11 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         if self.family_code_line_edit.text().strip():
             filters = {"filtrar_apenas_familia": self.family_code_line_edit.text().strip()}
         task = TaskImportProductsAndPersist(self, filters)
+        self.bind_task_events(task)
+        task.start()
+
+    def on_click_import_sellers_push_button(self):
+        task = TaskImportSellersAndPersist(self)
         self.bind_task_events(task)
         task.start()
 

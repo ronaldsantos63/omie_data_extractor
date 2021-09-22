@@ -59,7 +59,8 @@ class OmieService:
                     "ordenar_por": "CODIGO",
                     "tpNF": "1",
                     "dRegInicial": start_date,
-                    "dRegFinal": end_date
+                    "dRegFinal": end_date,
+                    "cDetalhesPedido": "S"
                 }
             ]
         }
@@ -143,3 +144,17 @@ class OmieService:
         }
 
         return OmieService.__post(url=f"{constants.BASE_URL}{constants.PRODUCTS_RESOURCE}", payload=payload)
+
+    @staticmethod
+    def get_sellers(page: int = 1) -> dict:
+        payload = {
+            "call": "ListarVendedores",
+            "param": [
+                {
+                    "pagina": page,
+                    "registros_por_pagina": constants.PAGE_SIZE
+                }
+            ]
+        }
+
+        return OmieService.__post(url=f"{constants.BASE_URL}{constants.SELLERS_RESOURCE}", payload=payload)
