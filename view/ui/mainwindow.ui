@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>380</height>
+    <height>445</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -20,12 +20,6 @@
    <size>
     <width>500</width>
     <height>280</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>500</width>
-    <height>400</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -179,9 +173,25 @@
      </widget>
     </item>
     <item>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string>Importar Vendedores</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="import_sellers_push_button">
+         <property name="text">
+          <string>Importar vendedores</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="QGroupBox" name="retroactive_importation_gb">
       <property name="title">
-       <string>Importar retroativo</string>
+       <string>Importar vendas retroativas</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>

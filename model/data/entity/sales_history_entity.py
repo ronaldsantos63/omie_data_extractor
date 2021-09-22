@@ -1,7 +1,10 @@
 from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import Column, Integer, String, Date
 
 from model.data import mapper_registry
+from model.data.entity.sellers_entity import SellersEntity
 
 
 @mapper_registry.mapped
@@ -116,27 +119,13 @@ class SalesHistoryEntity:
                                                                           "ano da operação.")
     cfop = Column(String(5), nullable=False)
 
-    def update(self, sale: 'SalesHistoryEntity') -> None:
-        self.cnpj_cpf = sale.cnpj_cpf
-        self.state_registration = sale.state_registration
-        self.client_name = sale.client_name
-        self.cep = sale.cep
-        self.uf = sale.uf
-        self.city = sale.city
-        self.address = sale.address
-        self.telephone = sale.telephone
-        self.email = sale.email
-        self.transaction_date = sale.transaction_date
-        self.product_code = sale.product_code
-        self.quantity = sale.quantity
-        self.total_price = sale.total_price
-        self.classification = sale.classification
-        self.invoice_number = sale.invoice_number
-        self.invoice_issue_date = sale.invoice_issue_date
-        self.cfop = sale.cfop
-
     @staticmethod
-    def from_json(nfe_json_dict: dict, customer_json_dict: dict, product_json_dict: dict) -> "SalesHistoryEntity":
+    def from_json(
+            nfe_json_dict: dict,
+            customer_json_dict: dict,
+            product_json_dict: dict,
+            seller_entity: Optional['SellersEntity']
+    ) -> "SalesHistoryEntity":
 
         def get_classification_name_by_cfop(cfop) -> str:
             if cfop in ["5102", "6102", "5103", "6103", "5104", "6104", "5120", "6120", "5401", "6401", "5402", "6402",
@@ -179,5 +168,7 @@ class SalesHistoryEntity:
             classification=classification,
             invoice_number=int(nfe_json_dict["ide"]["nNF"]),
             invoice_issue_date=date.date(),
-            cfop=str(product_json_dict["CFOP"]).replace(".", "")
+            cfop=str(product_json_dict["CFOP"]).replace(".", ""),
+            sales_zone_code=seller_entity.id_omie if seller_entity else '',
+            sales_zone_description=seller_entity.name if seller_entity else ''
         )
