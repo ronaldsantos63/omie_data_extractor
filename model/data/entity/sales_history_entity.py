@@ -138,13 +138,17 @@ class SalesHistoryEntity:
 
         if nfe_json_dict["ide"]["dInut"] != "" or nfe_json_dict["ide"]["dCan"] != "":
             classification = "CANCELAMENTO"
+        elif product_json_dict['itemPedido'].get('cItemDevolvido') == 'S':
+            classification = 'DEVOLUCAO'
         else:
-            classification = get_classification_name_by_cfop(str(product_json_dict["CFOP"]).replace(".", ""))
+            classification = get_classification_name_by_cfop(str(product_json_dict['prod']["CFOP"]).replace(".", ""))
 
         date_str = nfe_json_dict["ide"]["dCan"] if nfe_json_dict["ide"]["dCan"] != "" else \
             nfe_json_dict["ide"]["dInut"] if nfe_json_dict["ide"]["dInut"] != "" else nfe_json_dict["ide"]["dEmi"]
 
         date = datetime.strptime(date_str, "%d/%m/%Y")
+
+        product_json_dict = product_json_dict['prod']
 
         return SalesHistoryEntity(
             cnpj_cpf=str(customer_json_dict["cnpj_cpf"]).replace(".", "").replace("/", "").replace("-", ""),
