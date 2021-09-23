@@ -37,6 +37,8 @@ class OmieDataProvider:
             __has_data = current_page < nfe_result_json["total_de_paginas"]
 
             for nf_json in nfe_result_json["nfCadastro"]:
+                if nf_json['ide'].get('cDeneg') == 'S':
+                    continue
                 seller_omie_id = nf_json['pedido'].get('nIdVendedor')
                 seller_entity = self.__get_seller(
                     seller_omie_id=seller_omie_id,
@@ -55,7 +57,7 @@ class OmieDataProvider:
                     sales_history_entity = SalesHistoryEntity.from_json(
                         nf_json,
                         customer_result_json,
-                        prod_json["prod"],
+                        prod_json,
                         seller_entity
                     )
 
