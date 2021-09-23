@@ -1,13 +1,19 @@
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, Session
 
 from model.data import mapper_registry
 
 
 class DatabaseManager:
-    __engine = create_engine("sqlite:///omie_database.db", echo=True)
-    __session_maker: Session = sessionmaker(bind=__engine, future=True)
-    __session: Session = __session_maker()
+    __engine: Engine
+    __session_maker: sessionmaker
+    __session: Session
+
+    def __init__(self):
+        self.__engine = create_engine("sqlite:///omie_database.db", echo=True)
+        self.__session_maker = sessionmaker(bind=self.__engine, future=True)
+        self.__session = self.__session_maker()
 
     def create_all_tables(self) -> None:
         with self.__engine.connect() as connection:
