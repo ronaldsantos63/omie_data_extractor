@@ -27,6 +27,7 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         self.__manager.create_all_tables()
 
     def setup(self):
+        self.adjustSize()
         icon = QtGui.QIcon(":/logo.png")
         self.setWindowIcon(icon)
         self.setup_tray_icon(icon)
@@ -117,8 +118,8 @@ class MainApplication(QMainWindow, Ui_MainWindow):
         if self.start_date_dateedit.date() > self.end_date_dateedit.date():
             QMessageBox.warning(self, "Atenção", "A data inicial deve ser menor que a data final")
             return
-        start_date = self.start_date_dateedit.text()
-        end_date = self.end_date_dateedit.text()
+        start_date = self.start_date_dateedit.date().toString('dd/MM/yyyy')
+        end_date = self.end_date_dateedit.date().toString('dd/MM/yyyy')
         check_products_in_local_database = self.check_products_elanco_local_check_box.isChecked()
 
         task = TaskImportSalesAndPersist(self, start_date, end_date, check_products_in_local_database)
